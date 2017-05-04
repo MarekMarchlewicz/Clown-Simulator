@@ -4,11 +4,13 @@ using System.Collections.Generic;
 
 public class BalloonPoint : MonoBehaviour
 {
-	public System.Action<BalloonPoint> OnDestroyed;
-
     private Balloon parent;
 
     private List<BalloonPoint> neighbours = new List<BalloonPoint>();
+
+	public float Size { get { return transform.localScale.x; } }
+
+	public Vector3 LocalPosition { get { return transform.localPosition; } }
 
     public void Initialize(Balloon balloon, float inflatingTime)
     {
@@ -66,26 +68,12 @@ public class BalloonPoint : MonoBehaviour
 
             yield return new WaitForEndOfFrame();
         }
-
-//		if (OnDestroyed != null) 
-//		{
-//			OnDestroyed (this);
-//		}
-//
-//        Destroy(gameObject);
     }
 
     public void AddNeighbour(BalloonPoint newNeighbour)
     {
         neighbours.Add(newNeighbour);
-
-		newNeighbour.OnDestroyed += OnNeighbourDestroyed;
     }
-
-	private void OnNeighbourDestroyed(BalloonPoint neighbourToRemove)
-	{
-		neighbours.Remove(neighbourToRemove);
-	}
 
     public List<BalloonPoint> GetNeighbours()
     {

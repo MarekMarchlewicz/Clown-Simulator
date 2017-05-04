@@ -58,7 +58,6 @@ public class Balloon : MonoBehaviour
                     spawnPosition.z = 0f;
 
                     BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnPosition, Quaternion.identity, transform).GetComponent<BalloonPoint>();
-					newBalloonPoint.OnDestroyed += OnBalloonPointDestroyed;
 
 					balloonPoints.Add (newBalloonPoint);
 
@@ -104,11 +103,6 @@ public class Balloon : MonoBehaviour
             }
         }
     }
-
-	private void OnBalloonPointDestroyed(BalloonPoint pointDestroyed)
-	{
-		balloonPoints.Remove (pointDestroyed);
-	}
 
 	public List<BalloonPoint> GetPoints()
 	{

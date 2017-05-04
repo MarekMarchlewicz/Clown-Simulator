@@ -14,9 +14,6 @@ public class BalloonVisualiser : MonoBehaviour
 
 	private Mesh mesh;
 
-	private List<Vector3> vertices = new List<Vector3>();
-	private List<int> triangles = new List<int>();
-
 	private int points;
 
 	public void Initialize(Balloon parent)
@@ -31,51 +28,7 @@ public class BalloonVisualiser : MonoBehaviour
 
 	private void Update()
 	{
-//		vertices.Clear ();
-//		triangles.Clear ();
-//
-//		points = ballon.GetPoints ().Count;
-//
-//		for (int i = 0; i < points; i++) 
-//		{
-//			AddTubeToPoint(i, ballon.GetPoints()[i]);    
-//		}
-//
-//		mesh.vertices = vertices.ToArray();
-//		mesh.triangles = triangles.ToArray();
-
-		Torus ();
-	}
-
-	private void AddTubeToPoint(int num, BalloonPoint point) 
-	{
-		Vector3 pointPosition = point.transform.position;
-
-		float turn = Mathf.PI * 2 / points;
-
-		for (int s = 0; s < sides; s++) 
-		{
-			float angle = s * turn;
-
-			Vector3 vertex = point.transform.position + Quaternion.Euler (point.transform.right * angle) * point.transform.forward;
-
-			vertices.Add (vertex);
-		}
-
-		if (vertices.Count >= sides * 4)
-		{
-			for (int side = 0; side < sides; sides++) 
-			{
-				int start = vertices.Count - sides * 4;
-
-				triangles.Add (start + 0);
-				triangles.Add (start + 1);
-				triangles.Add (start + 2);
-				triangles.Add (start + 1);
-				triangles.Add (start + 3);
-				triangles.Add (start + 2);
-			}
-		}
+		RefreshMesh ();
 	}
 
 	private Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3) 
@@ -94,7 +47,7 @@ public class BalloonVisualiser : MonoBehaviour
 		return p;
 	}
 
-	private void Torus()
+	private void RefreshMesh()
 	{
 		List<BalloonPoint> points = ballon.GetPoints ();
 
@@ -105,14 +58,16 @@ public class BalloonVisualiser : MonoBehaviour
 
 		#region Vertices		
 		Vector3[] vertices = new Vector3[(pointsCount) * (sides+1)];
-		float _2pi = Mathf.PI * 2f;
+
+		BalloonPoint point;
+
 		for( int seg = 0; seg < pointsCount; seg++ )
 		{
-			int currSeg = seg % (pointsCount);
+			point = points[seg];
 
-			float radius = points[currSeg].transform.localScale.x;
+			float radius = point.transform.localScale.x;
 
-			Vector3 point = points[currSeg].transform.position;
+			Vector3 position = points[seg].LocalPosition;
 
 			for( int side = 0; side <= sides; side++ )
 			{
@@ -120,20 +75,20 @@ public class BalloonVisualiser : MonoBehaviour
 
 				float angle = -(float)currSide / sides * 360f;
 
-				Vector3 vertex = Quaternion.Euler (points[currSeg].transform.right * angle) * points[currSeg].transform.forward;
+				Vector3 vertex = Quaternion.Euler (points[seg].transform.right * angle) * points[seg].transform.forward;
 
 				vertex *= radius;
 
-				vertices[side + seg * (sides + 1)] = point + vertex;
+				vertices[side + seg * (sides + 1)] = position + vertex;
 			}
 		}
 		#endregion
 
 		#region Triangles
-		int nbFaces = vertices.Length;
-		int nbTriangles = nbFaces * 2;
-		int nbIndexes = nbTriangles * 3;
-		int[] triangles = new int[ nbIndexes ];
+		int facesNo = vertices.Length;
+		int trianglesNo = facesNo * 2;
+		int indexes = trianglesNo * 3;
+		int[] triangles = new int[ indexes ];
 
 		int i = 0;
 		for( int seg = 0; seg < pointsCount - 1; seg++ )
