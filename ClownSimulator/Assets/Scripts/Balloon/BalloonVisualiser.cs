@@ -104,9 +104,9 @@ public class BalloonVisualiser : MonoBehaviour
 			return;
 
 		#region Vertices		
-		Vector3[] vertices = new Vector3[(pointsCount+1) * (sides+1)];
+		Vector3[] vertices = new Vector3[(pointsCount) * (sides+1)];
 		float _2pi = Mathf.PI * 2f;
-		for( int seg = 0; seg <= pointsCount; seg++ )
+		for( int seg = 0; seg < pointsCount; seg++ )
 		{
 			int currSeg = seg % (pointsCount);
 
@@ -118,13 +118,13 @@ public class BalloonVisualiser : MonoBehaviour
 			{
 				int currSide = side == sides ? 0 : side;
 
-				float angle = (float)currSide / sides * 360f;
+				float angle = -(float)currSide / sides * 360f;
 
-				Vector3 vertex = Quaternion.Euler (points[currSeg].transform.right * angle) * Vector3.up;
+				Vector3 vertex = Quaternion.Euler (points[currSeg].transform.right * angle) * points[currSeg].transform.forward;
 
 				vertex *= radius;
 
-				vertices[side + seg * (sides+1)] = point + vertex;
+				vertices[side + seg * (sides + 1)] = point + vertex;
 			}
 		}
 		#endregion
@@ -136,14 +136,13 @@ public class BalloonVisualiser : MonoBehaviour
 		int[] triangles = new int[ nbIndexes ];
 
 		int i = 0;
-		for( int seg = 1; seg < pointsCount; seg++ )
+		for( int seg = 0; seg < pointsCount - 1; seg++ )
 		{			
 			for( int side = 0; side <= sides - 1; side++ )
 			{
 				int current = side + seg * (sides+1);
 
-				int c = seg < pointsCount ? (seg + 1) * (sides+1) : 0;
-				int next = side + (seg + 1) * (sides+1);//c;
+				int next = side + (seg + 1) * (sides+1);
 
 				if( i < triangles.Length - 6 )
 				{
