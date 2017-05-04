@@ -67,12 +67,12 @@ public class BalloonPoint : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
 
-		if (OnDestroyed != null) 
-		{
-			OnDestroyed (this);
-		}
-
-        Destroy(gameObject);
+//		if (OnDestroyed != null) 
+//		{
+//			OnDestroyed (this);
+//		}
+//
+//        Destroy(gameObject);
     }
 
     public void AddNeighbour(BalloonPoint newNeighbour)

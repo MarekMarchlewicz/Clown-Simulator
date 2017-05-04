@@ -64,10 +64,15 @@ public class Balloon : MonoBehaviour
 
                     newBalloonPoint.Initialize(this, inflatingTime);
 
-                    if (lastAddedBallonPoint != null)
-                    {
-                        lastAddedBallonPoint.AddNeighbour(newBalloonPoint);
-                        newBalloonPoint.AddNeighbour(lastAddedBallonPoint);
+					if (lastAddedBallonPoint != null) 
+					{
+						lastAddedBallonPoint.AddNeighbour (newBalloonPoint);
+						newBalloonPoint.AddNeighbour (lastAddedBallonPoint);
+
+						if (balloonPoints.Count > 0)
+						{
+							lastAddedBallonPoint.transform.right = newBalloonPoint.transform.position - balloonPoints [balloonPoints.Count - 1].transform.position;
+						}
                     }
 
                     lastAddedBallonPoint = newBalloonPoint;

@@ -17,8 +17,6 @@ public class BalloonVisualiser : MonoBehaviour
 	private List<Vector3> vertices = new List<Vector3>();
 	private List<int> triangles = new List<int>();
 
-	[SerializeField] private float radius2 = 2f;
-
 	private int points;
 
 	public void Initialize(Balloon parent)
@@ -98,8 +96,6 @@ public class BalloonVisualiser : MonoBehaviour
 
 	private void Torus()
 	{
-		
-
 		List<BalloonPoint> points = ballon.GetPoints ();
 
 		int pointsCount = points.Count;
@@ -112,31 +108,23 @@ public class BalloonVisualiser : MonoBehaviour
 		float _2pi = Mathf.PI * 2f;
 		for( int seg = 0; seg <= pointsCount; seg++ )
 		{
-			
 			int currSeg = seg % (pointsCount);
 
-			float radius1 = points[currSeg].transform.localScale.x;
+			float radius = points[currSeg].transform.localScale.x;
 
-			float t1 = (float)currSeg / pointsCount * _2pi;
-			Vector3 r1 = points[currSeg].transform.position;// new Vector3( Mathf.Cos(t1) * radius1, 0f, Mathf.Sin(t1) * radius1 );//
+			Vector3 point = points[currSeg].transform.position;
 
 			for( int side = 0; side <= sides; side++ )
 			{
 				int currSide = side == sides ? 0 : side;
 
-				Vector3 normale =  Vector3.Cross( r1, Vector3.up );
-				float t2 = (float)currSide / sides * _2pi;
-				Vector3 r2 = Quaternion.AngleAxis( -t1 * Mathf.Rad2Deg, Vector3.up ) *new Vector3( Mathf.Sin(t2) * radius2, Mathf.Cos(t2) * radius2 );
+				float angle = (float)currSide / sides * 360f;
 
-				float angle = t2;
+				Vector3 vertex = Quaternion.Euler (points[currSeg].transform.right * angle) * Vector3.up;
 
-				Vector3 vertex = Quaternion.Euler (points[currSeg].transform.right * t2 * Mathf.Rad2Deg) * points[currSeg].transform.up;
+				vertex *= radius;
 
-				Debug.DrawRay(r1, vertex, Color.red);
-
-				r2 = vertex * radius2;
-
-				vertices[side + seg * (sides+1)] = r1 + r2;
+				vertices[side + seg * (sides+1)] = point + vertex;
 			}
 		}
 		#endregion
@@ -148,12 +136,14 @@ public class BalloonVisualiser : MonoBehaviour
 		int[] triangles = new int[ nbIndexes ];
 
 		int i = 0;
-		for( int seg = 0; seg <= pointsCount; seg++ )
+		for( int seg = 1; seg < pointsCount; seg++ )
 		{			
 			for( int side = 0; side <= sides - 1; side++ )
 			{
 				int current = side + seg * (sides+1);
-				int next = side + (seg < (pointsCount) ?(seg+1) * (sides+1) : 0);
+
+				int c = seg < pointsCount ? (seg + 1) * (sides+1) : 0;
+				int next = side + (seg + 1) * (sides+1);//c;
 
 				if( i < triangles.Length - 6 )
 				{
