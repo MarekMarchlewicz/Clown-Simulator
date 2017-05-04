@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody), typeof(BalloonVisualiser))]
 public class Balloon : MonoBehaviour
 {
     [SerializeField]
@@ -26,6 +26,8 @@ public class Balloon : MonoBehaviour
 
     private float lastSpawnBalloonPointTime;
 
+	private List<BalloonPoint> balloonPoints;
+
     private BalloonPoint lastAddedBallonPoint;
 
     private Rigidbody mRigidBody;
@@ -33,6 +35,10 @@ public class Balloon : MonoBehaviour
     private void Awake()
     {
         mRigidBody = GetComponent<Rigidbody>();
+
+		GetComponent<BalloonVisualiser> ().Initialize (this);
+
+		balloonPoints = new List<BalloonPoint> ();
     }
 
     public void AddForceAtPosition(Vector3 force, Vector3 position)
@@ -52,6 +58,9 @@ public class Balloon : MonoBehaviour
                     spawnPosition.z = 0f;
 
                     BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnPosition, Quaternion.identity, transform).GetComponent<BalloonPoint>();
+					newBalloonPoint.OnDestroyed += OnBalloonPointDestroyed;
+
+					balloonPoints.Add (newBalloonPoint);
 
                     newBalloonPoint.Initialize(this, inflatingTime);
 
@@ -90,4 +99,14 @@ public class Balloon : MonoBehaviour
             }
         }
     }
+
+	private void OnBalloonPointDestroyed(BalloonPoint pointDestroyed)
+	{
+		balloonPoints.Remove (pointDestroyed);
+	}
+
+	public List<BalloonPoint> GetPoints()
+	{
+		return balloonPoints;
+	}
 }

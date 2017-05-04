@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class BalloonPoint : MonoBehaviour
 {
+	public System.Action<BalloonPoint> OnDestroyed;
+
     private Balloon parent;
 
     private List<BalloonPoint> neighbours = new List<BalloonPoint>();
@@ -65,10 +67,10 @@ public class BalloonPoint : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
 
-        foreach (BalloonPoint neighbour in neighbours)
-        {
-            neighbour.RemoveNeighbour(this);
-        }
+		if (OnDestroyed != null) 
+		{
+			OnDestroyed (this);
+		}
 
         Destroy(gameObject);
     }
@@ -76,12 +78,14 @@ public class BalloonPoint : MonoBehaviour
     public void AddNeighbour(BalloonPoint newNeighbour)
     {
         neighbours.Add(newNeighbour);
+
+		newNeighbour.OnDestroyed += OnNeighbourDestroyed;
     }
 
-    public void RemoveNeighbour(BalloonPoint neighbourToRemove)
-    {
-        neighbours.Remove(neighbourToRemove);
-    }
+	private void OnNeighbourDestroyed(BalloonPoint neighbourToRemove)
+	{
+		neighbours.Remove(neighbourToRemove);
+	}
 
     public List<BalloonPoint> GetNeighbours()
     {
