@@ -6,7 +6,7 @@ public class BalloonVisualiser : MonoBehaviour
 {
 	[SerializeField] private int sides = 18;
 
-	private Balloon ballon;
+	private Balloon balloon;
 
 	private MeshRenderer meshRenderer;
 
@@ -18,17 +18,12 @@ public class BalloonVisualiser : MonoBehaviour
 
 	public void Initialize(Balloon parent)
 	{
-		ballon = parent;
+		balloon = parent;
 
-		meshRenderer = ballon.GetComponent<MeshRenderer> ();
-		meshFilter = ballon.GetComponent<MeshFilter> ();
+		meshRenderer = balloon.GetComponent<MeshRenderer> ();
+		meshFilter = balloon.GetComponent<MeshFilter> ();
 
 		mesh = meshFilter.mesh;
-	}
-
-	private void Update()
-	{
-		RefreshMesh ();
 	}
 
 	private Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3) 
@@ -47,9 +42,9 @@ public class BalloonVisualiser : MonoBehaviour
 		return p;
 	}
 
-	private void RefreshMesh()
+	public void UpdateMesh()
 	{
-		List<BalloonPoint> points = ballon.GetPoints ();
+		List<BalloonPoint> points = balloon.GetPoints ();
 
 		int pointsCount = points.Count;
 
@@ -67,7 +62,7 @@ public class BalloonVisualiser : MonoBehaviour
 
 			float radius = point.transform.localScale.x;
 
-			Vector3 position = points[seg].LocalPosition;
+			Vector3 position = points[seg].transform.position;
 
 			for( int side = 0; side <= sides; side++ )
 			{
@@ -75,11 +70,11 @@ public class BalloonVisualiser : MonoBehaviour
 
 				float angle = -(float)currSide / sides * 360f;
 
-				Vector3 vertex = Quaternion.Euler (points[seg].transform.right * angle) * points[seg].transform.forward;
+				Vector3 direction = Quaternion.AngleAxis(angle, point.transform.forward) * point.transform.up;
 
-				vertex *= radius;
+				Vector3 vertex = position + direction * radius;
 
-				vertices[side + seg * (sides + 1)] = position + vertex;
+				vertices[side + seg * (sides + 1)] = balloon.transform.InverseTransformPoint(vertex);
 			}
 		}
 		#endregion

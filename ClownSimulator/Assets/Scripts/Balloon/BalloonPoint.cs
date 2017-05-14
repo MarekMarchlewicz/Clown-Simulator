@@ -1,61 +1,80 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class BalloonPoint : MonoBehaviour
 {
     private Balloon parent;
 
-    private List<BalloonPoint> neighbours = new List<BalloonPoint>();
+	private BalloonPoint previous, next;
 
 	public float Size { get { return transform.localScale.x; } }
 
 	public Vector3 LocalPosition { get { return transform.localPosition; } }
 
-    public void Initialize(Balloon balloon, float inflatingTime)
+	private BalloonLifecycle localState;
+
+	public void Initialize(Balloon balloon, float inflatingTime, float targetScale = 1f)
     {
         parent = balloon;
 
         transform.localScale = Vector3.zero;
 
-        StartCoroutine(Inflate(inflatingTime));
+		StartCoroutine(Inflate(inflatingTime, targetScale));
     }
 
-    private IEnumerator Inflate(float inflatingTime)
+	private IEnumerator Inflate(float inflatingTime, float targetScale)
     {
+		localState = BalloonLifecycle.Inflating;
+
         float startTime = Time.time;
 
         while(Time.time - startTime < inflatingTime)
         {
             float lerp = (Time.time - startTime) / inflatingTime;
 
-            transform.localScale = Vector3.one * lerp;
+			transform.localScale = Vector3.one * lerp * targetScale;
 
             yield return new WaitForEndOfFrame();
         }
 
-        transform.localScale = Vector3.one;
+		transform.localScale = Vector3.one * targetScale;
+
+		localState = BalloonLifecycle.Idle;
     }
 
     public void Pierce(Vector3 piercePosition, float deflatingTime, float deflatingDelay)
     {
-        StopAllCoroutines();
+		if (localState == BalloonLifecycle.Idle) 
+		{
+			StopAllCoroutines ();
 
-        StartCoroutine(Deflate(piercePosition, deflatingTime, deflatingDelay));
+			StartCoroutine (Deflate (piercePosition, deflatingTime, deflatingDelay));
+		}
     }
 
     private IEnumerator Deflate(Vector3 piercePosition, float deflatingTime, float deflatingDelay)
     {
+		localState = BalloonLifecycle.Deflating;
+
         float startTime = Time.time;
 
+		bool trigerredNeighbours = false;
         while (Time.time - startTime < deflatingTime)
         {
-            if(Time.time - startTime > deflatingDelay)
+
+			if(! trigerredNeighbours && Time.time - startTime > deflatingDelay)
             {
-                foreach(BalloonPoint neighbour in neighbours)
-                {
-                    neighbour.Pierce(transform.position, deflatingTime, deflatingDelay);
-                }
+				if (next != null) 
+				{
+					next.Pierce(transform.position, deflatingTime, deflatingDelay);
+				}
+
+				if (previous != null) 
+				{
+					previous.Pierce(transform.position, deflatingTime, deflatingDelay);
+				}
+
+				trigerredNeighbours = true;
             }
 
             float lerp = (Time.time - startTime) / deflatingTime;
@@ -68,15 +87,27 @@ public class BalloonPoint : MonoBehaviour
 
             yield return new WaitForEndOfFrame();
         }
+
+		transform.localScale = Vector3.zero;
     }
 
-    public void AddNeighbour(BalloonPoint newNeighbour)
-    {
-        neighbours.Add(newNeighbour);
-    }
+	public BalloonPoint GetNext()
+	{
+		return next;
+	}
 
-    public List<BalloonPoint> GetNeighbours()
-    {
-        return neighbours;
-    }
+	public void SetNext(BalloonPoint balloonPoint)
+	{
+		next = balloonPoint;
+	}
+
+	public BalloonPoint GetPrevious()
+	{
+		return previous;
+	}
+
+	public void SetPrevious(BalloonPoint balloonPoint)
+	{
+		previous = balloonPoint;
+	}
 }

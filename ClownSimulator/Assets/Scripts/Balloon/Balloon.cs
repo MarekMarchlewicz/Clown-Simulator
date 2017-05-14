@@ -28,6 +28,8 @@ public class Balloon : MonoBehaviour
 
 	private List<BalloonPoint> balloonPoints;
 
+	private BalloonVisualiser visualiser;
+
     private BalloonPoint lastAddedBallonPoint;
 
     private Rigidbody mRigidBody;
@@ -36,7 +38,8 @@ public class Balloon : MonoBehaviour
     {
         mRigidBody = GetComponent<Rigidbody>();
 
-		GetComponent<BalloonVisualiser> ().Initialize (this);
+		visualiser = GetComponent<BalloonVisualiser> ();
+		visualiser.Initialize (this);
 
 		balloonPoints = new List<BalloonPoint> ();
     }
@@ -60,23 +63,36 @@ public class Balloon : MonoBehaviour
                     BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnPosition, Quaternion.identity, transform).GetComponent<BalloonPoint>();
 
 					balloonPoints.Add (newBalloonPoint);
-
-                    newBalloonPoint.Initialize(this, inflatingTime);
-
-					if (lastAddedBallonPoint != null) 
+                    
+					// First Point
+					if (lastAddedBallonPoint == null) 
 					{
-						lastAddedBallonPoint.AddNeighbour (newBalloonPoint);
-						newBalloonPoint.AddNeighbour (lastAddedBallonPoint);
+						newBalloonPoint.Initialize(this, inflatingTime, 0f);
 
-						if (balloonPoints.Count > 0)
-						{
-							lastAddedBallonPoint.transform.right = newBalloonPoint.transform.position - balloonPoints [balloonPoints.Count - 1].transform.position;
-						}
-                    }
+						lastAddedBallonPoint = newBalloonPoint;
+					} 
+					// Next point
+					else 
+					{
+						newBalloonPoint.Initialize(this, inflatingTime, 1f);
 
-                    lastAddedBallonPoint = newBalloonPoint;
+						Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
+						newDirection.Normalize ();
+
+						newBalloonPoint.transform.forward = newDirection;
+
+						lastAddedBallonPoint.SetNext (newBalloonPoint);
+						newBalloonPoint.SetPrevious (lastAddedBallonPoint);
+					}
+
+					lastAddedBallonPoint = newBalloonPoint;
 
                     lastSpawnBalloonPointTime = Time.time;
+
+					for (int i = 0; i < balloonPoints.Count; i++) 
+					{
+						balloonPoints [i].gameObject.name = "Point" + i.ToString ();
+					}
                 }
             }
             else if (Input.GetMouseButtonUp(0))
@@ -102,6 +118,8 @@ public class Balloon : MonoBehaviour
                 }
             }
         }
+
+		visualiser.UpdateMesh ();
     }
 
 	public List<BalloonPoint> GetPoints()
