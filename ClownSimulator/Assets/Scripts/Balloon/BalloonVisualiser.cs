@@ -71,7 +71,7 @@ public class BalloonVisualiser : MonoBehaviour
 
 				float angle = (float)currSide / sides * 360f;
 
-				Vector3 direction = Quaternion.AngleAxis(-angle, point.transform.forward) * point.transform.up;
+				Vector3 direction = Quaternion.AngleAxis(angle, point.transform.forward) * point.transform.up;
 
 				Vector3 vertex = position + direction * radius;
 

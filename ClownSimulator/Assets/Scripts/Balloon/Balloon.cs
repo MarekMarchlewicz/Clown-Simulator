@@ -88,9 +88,6 @@ public class Balloon : MonoBehaviour
                 Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
                 newDirection.Normalize();
 
-                if(newDirection != Vector3.zero)
-                    newBalloonPoint.transform.forward = newDirection;
-
                 lastAddedBallonPoint.SetNext(newBalloonPoint);
                 newBalloonPoint.SetPrevious(lastAddedBallonPoint);
             }
@@ -127,12 +124,6 @@ public class Balloon : MonoBehaviour
                 else
                 {
                     newBalloonPoint.Initialize(this, inflatingTime, currentColour, 0.03f);
-
-                    Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
-                    newDirection.Normalize();
-
-                    if(newDirection != Vector3.zero)
-                        newBalloonPoint.transform.forward = newDirection;
 
                     lastAddedBallonPoint.SetNext(newBalloonPoint);
                     newBalloonPoint.SetPrevious(lastAddedBallonPoint);

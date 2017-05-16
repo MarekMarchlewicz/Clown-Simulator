@@ -9,7 +9,9 @@ public class GenerateColourWheelTexture : MonoBehaviour
     private const int WIDTH = 256;
     private const int HEIGHT = 256;
 
+    #if UNITY_EDITOR
     [MenuItem("Tools/Generate Colour Wheel Texture")]
+    #endif
     private static void Generate ()
     {
         Texture2D texture = new Texture2D(WIDTH, HEIGHT);
@@ -36,6 +38,8 @@ public class GenerateColourWheelTexture : MonoBehaviour
 
         File.WriteAllBytes(Application.dataPath + "/ColourWheel.png", texture.EncodeToPNG());
 
+        #if UNITY_EDITOR
         AssetDatabase.Refresh();
-	}
+        #endif
+    }
 }
