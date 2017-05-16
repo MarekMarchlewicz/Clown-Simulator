@@ -13,11 +13,15 @@ public class BalloonPoint : MonoBehaviour
 
 	private BalloonLifecycle localState;
 
-	public void Initialize(Balloon balloon, float inflatingTime, float targetScale = 1f)
+    public Color Colour { get; private set; }
+
+	public void Initialize(Balloon balloon, float inflatingTime, Color targetColour, float targetScale = 1f)
     {
         parent = balloon;
 
         transform.localScale = Vector3.zero;
+
+        Colour = targetColour;
 
 		StartCoroutine(Inflate(inflatingTime, targetScale));
     }
@@ -39,12 +43,12 @@ public class BalloonPoint : MonoBehaviour
 
 		transform.localScale = Vector3.one * targetScale;
 
-		localState = BalloonLifecycle.Idle;
+		localState = BalloonLifecycle.Inflated;
     }
 
     public void Pierce(Vector3 piercePosition, float deflatingTime, float deflatingDelay)
     {
-		if (localState == BalloonLifecycle.Idle) 
+		if (localState == BalloonLifecycle.Inflated) 
 		{
 			StopAllCoroutines ();
 

@@ -53,6 +53,7 @@ public class BalloonVisualiser : MonoBehaviour
 
 		#region Vertices		
 		Vector3[] vertices = new Vector3[(pointsCount) * (sides+1)];
+        Color[] colours = new Color[vertices.Length];
 
 		BalloonPoint point;
 
@@ -68,14 +69,16 @@ public class BalloonVisualiser : MonoBehaviour
 			{
 				int currSide = side == sides ? 0 : side;
 
-				float angle = -(float)currSide / sides * 360f;
+				float angle = (float)currSide / sides * 360f;
 
-				Vector3 direction = Quaternion.AngleAxis(angle, point.transform.forward) * point.transform.up;
+				Vector3 direction = Quaternion.AngleAxis(-angle, point.transform.forward) * point.transform.up;
 
 				Vector3 vertex = position + direction * radius;
 
 				vertices[side + seg * (sides + 1)] = balloon.transform.InverseTransformPoint(vertex);
-			}
+
+                colours[side + seg * (sides + 1)] = point.Colour;
+            }
 		}
 		#endregion
 
@@ -109,6 +112,7 @@ public class BalloonVisualiser : MonoBehaviour
 		#endregion
 
 		mesh.vertices = vertices;
+        mesh.colors = colours;
 		mesh.triangles = triangles;
 		mesh.RecalculateNormals ();
 		mesh.RecalculateBounds ();

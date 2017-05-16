@@ -1,6 +1,7 @@
 ﻿public enum BalloonLifecycle
 {
-    Inflating,
     Idle,
+    Inflating,
+    Inflated,
     Deflating
 }

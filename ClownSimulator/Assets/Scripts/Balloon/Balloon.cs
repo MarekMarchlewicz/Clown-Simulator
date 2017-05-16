@@ -24,7 +24,7 @@ public class Balloon : MonoBehaviour
 
     public float ForceMultiplier = 5f;
 
-    private float lastSpawnBalloonPointTime;
+    private Vector3 lastSpawnBalloonPoint;
 
 	private List<BalloonPoint> balloonPoints;
 
@@ -34,7 +34,11 @@ public class Balloon : MonoBehaviour
 
     private Rigidbody mRigidBody;
 
-    private void Awake()
+    private Transform spawnTarget;
+
+    private Color currentColour = Color.white;
+
+    public void Initialize(Transform newSpawnTarget)
     {
         mRigidBody = GetComponent<Rigidbody>();
 
@@ -42,6 +46,10 @@ public class Balloon : MonoBehaviour
 		visualiser.Initialize (this);
 
 		balloonPoints = new List<BalloonPoint> ();
+
+        lifecycle = BalloonLifecycle.Idle;
+
+        spawnTarget = newSpawnTarget;
     }
 
     public void AddForceAtPosition(Vector3 force, Vector3 position)
@@ -49,69 +57,104 @@ public class Balloon : MonoBehaviour
         mRigidBody.AddForceAtPosition(force, position);
     }
 
+    public void StartInflating()
+    {
+        if (lifecycle == BalloonLifecycle.Idle)
+        {
+            lifecycle = BalloonLifecycle.Inflating;
+        }
+    }
+
+    public void StopInflating()
+    {
+        if (lifecycle == BalloonLifecycle.Inflating)
+        {
+            lifecycle = BalloonLifecycle.Inflated;
+
+            BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnTarget.position, spawnTarget.rotation, transform).GetComponent<BalloonPoint>();
+
+            balloonPoints.Add(newBalloonPoint);
+
+            // First Point
+            if (lastAddedBallonPoint == null)
+            {
+                lastAddedBallonPoint = newBalloonPoint;
+            }
+            // Next point
+            else
+            {
+                newBalloonPoint.Initialize(this, inflatingTime, currentColour, 0f);
+
+                Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
+                newDirection.Normalize();
+
+                if(newDirection != Vector3.zero)
+                    newBalloonPoint.transform.forward = newDirection;
+
+                lastAddedBallonPoint.SetNext(newBalloonPoint);
+                newBalloonPoint.SetPrevious(lastAddedBallonPoint);
+            }
+
+            lastAddedBallonPoint = newBalloonPoint;
+
+            lastSpawnBalloonPoint = spawnTarget.position;
+        }
+    }
+
+    public void SetColour(Color newColour)
+    {
+        currentColour = newColour;
+    }
+
     private void Update()
     {
         if (lifecycle == BalloonLifecycle.Inflating)
         {
-            if (Input.GetMouseButton(0))
+            if (Vector3.Distance(lastSpawnBalloonPoint, spawnTarget.position) > newBalloonPointRatio)
             {
-                if (Time.time - lastSpawnBalloonPointTime > newBalloonPointRatio)
+                BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnTarget.position, spawnTarget.rotation, transform).GetComponent<BalloonPoint>();
+
+                balloonPoints.Add(newBalloonPoint);
+
+                // First Point
+                if (lastAddedBallonPoint == null)
                 {
-                    Vector3 spawnPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10));
-                    spawnPosition.z = 0f;
+                    newBalloonPoint.Initialize(this, inflatingTime, currentColour, 0f);
 
-                    BalloonPoint newBalloonPoint = Instantiate(balloonPointPrefab, spawnPosition, Quaternion.identity, transform).GetComponent<BalloonPoint>();
-
-					balloonPoints.Add (newBalloonPoint);
-                    
-					// First Point
-					if (lastAddedBallonPoint == null) 
-					{
-						newBalloonPoint.Initialize(this, inflatingTime, 0f);
-
-						lastAddedBallonPoint = newBalloonPoint;
-					} 
-					// Next point
-					else 
-					{
-						newBalloonPoint.Initialize(this, inflatingTime, 1f);
-
-						Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
-						newDirection.Normalize ();
-
-						newBalloonPoint.transform.forward = newDirection;
-
-						lastAddedBallonPoint.SetNext (newBalloonPoint);
-						newBalloonPoint.SetPrevious (lastAddedBallonPoint);
-					}
-
-					lastAddedBallonPoint = newBalloonPoint;
-
-                    lastSpawnBalloonPointTime = Time.time;
-
-					for (int i = 0; i < balloonPoints.Count; i++) 
-					{
-						balloonPoints [i].gameObject.name = "Point" + i.ToString ();
-					}
+                    lastAddedBallonPoint = newBalloonPoint;
                 }
-            }
-            else if (Input.GetMouseButtonUp(0))
-            {
-                lifecycle = BalloonLifecycle.Idle;
+                // Next point
+                else
+                {
+                    newBalloonPoint.Initialize(this, inflatingTime, currentColour, 0.03f);
+
+                    Vector3 newDirection = newBalloonPoint.transform.position - lastAddedBallonPoint.transform.position;
+                    newDirection.Normalize();
+
+                    if(newDirection != Vector3.zero)
+                        newBalloonPoint.transform.forward = newDirection;
+
+                    lastAddedBallonPoint.SetNext(newBalloonPoint);
+                    newBalloonPoint.SetPrevious(lastAddedBallonPoint);
+                }
+
+                lastAddedBallonPoint = newBalloonPoint;
+
+                lastSpawnBalloonPoint = spawnTarget.position;
             }
         }
-        else if (lifecycle == BalloonLifecycle.Idle)
+        else if (lifecycle == BalloonLifecycle.Inflated)
         {
             if (Input.GetMouseButtonDown(0))
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
 
-                if(Physics.Raycast(ray, out hit, 100f))
+                if (Physics.Raycast(ray, out hit, 100f))
                 {
                     BalloonPoint balloonPoint = hit.collider.GetComponent<BalloonPoint>();
 
-                    if(balloonPoint != null)
+                    if (balloonPoint != null)
                     {
                         balloonPoint.Pierce(hit.point, deflatingTime, deflatingDelay);
                     }
@@ -119,7 +162,8 @@ public class Balloon : MonoBehaviour
             }
         }
 
-		visualiser.UpdateMesh ();
+        if(lifecycle != BalloonLifecycle.Idle)
+		    visualiser.UpdateMesh ();
     }
 
 	public List<BalloonPoint> GetPoints()
